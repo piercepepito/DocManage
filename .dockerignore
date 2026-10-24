@@ -1,0 +1,17 @@
+tests/
+pytest.ini
+
+.venv/
+
+*.log
+
+.git
+.gitignore
+
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+.git/
+
