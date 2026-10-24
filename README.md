@@ -48,3 +48,6 @@ DocManage addresses this problem by preserving previous document versions, allow
 ## How can someone run and test it?
 1. .env file
 2. Setup docker
+
+
+Concurrency - optimized locking
