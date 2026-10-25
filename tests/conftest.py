@@ -3,6 +3,8 @@ import pytest
 from app.databases.db import get_db
 
 from app.schemas.documents_schemas import DocumentCreate
+from app.schemas import jobs_schemas
+
 from app.databases.models import Documents
 
 import uuid
@@ -41,4 +43,15 @@ def valid_create_doc_history_payload():
         version=1,
         created_at=time_now,
         updated_at=time_now
+    )
+
+@pytest.fixture
+def valid_job_payload():
+    return jobs_schemas.JobCreate(
+        document_id = uuid.uuid4(),
+        attempt_no = 2,
+        status = "pending",
+        error_message = None,
+        next_attempt_at = None,
+        completed_at = None
     )
