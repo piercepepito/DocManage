@@ -3,10 +3,14 @@ from app.databases.db import Base
 from sqlalchemy import String, Text, DateTime, Uuid, ForeignKey, Integer
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import text
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import UniqueConstraint, CheckConstraint
 
 from uuid import UUID
 from datetime import datetime
+
+from typing import Literal
+
+JobStatus=Literal["pending","succeeded","in flight","exhausted"]
 
 class Documents(Base):
     __tablename__="documents"
@@ -61,3 +65,34 @@ class DocumentHistory(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),
                                                  nullable=False,
                                                  server_default=text("now()"))
+
+class Jobs(Base):
+    __tablename__="jobs"
+
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('pending','succeeded','in flight','exhausted')",
+            name="check_job_status"
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid,
+                                     primary_key=True,
+                                     nullable=False,
+                                     server_default=text("gen_random_uuid()"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),
+                                                 nullable=False,
+                                                 server_default=text("now()"))
+    document_id: Mapped[UUID] = mapped_column(Uuid,
+                                              ForeignKey("documents.id"),
+                                              nullable=False)
+    attempt_no: Mapped[int] = mapped_column(Integer,
+                                            nullable=False,
+                                            server_default=text("1"))
+    status: Mapped[JobStatus] = mapped_column(String,
+                                              nullable=False,
+                                              default="pending")
+    error_message: Mapped[str | None] = mapped_column(String)
+    next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True),
+                                                   nullable=True)
