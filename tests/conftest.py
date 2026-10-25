@@ -2,7 +2,7 @@ import pytest
 
 from app.databases.db import get_db
 
-from app.schemas import DocumentCreate
+from app.schemas.documents_schemas import DocumentCreate
 from app.databases.models import Documents
 
 import uuid

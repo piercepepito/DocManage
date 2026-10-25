@@ -46,7 +46,7 @@ class TestWebhookSignature:
 
         assert "Invalid secret key or payload" in str(e.value)
 
-    @patch("app.webhook.sender.schemas")
+    @patch("app.webhook.sender.documents_schemas")
     def test_unicode_error(self, mock_schema, valid_create_doc_history_payload):
         mock_schema.DocumentResponse.model_validate.side_effect = UnicodeError()
         
@@ -70,7 +70,7 @@ class TestWebhookSignature:
 
         assert "Failed to format the document payload into a valid JSON structure" in str(e.value)
 
-    @patch("app.webhook.sender.schemas")
+    @patch("app.webhook.sender.documents_schemas")
     def test_exception(self, mock_schema, valid_create_doc_history_payload):
         mock_schema.WebhookSignatureSchema.side_effect=Exception()
         

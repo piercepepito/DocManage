@@ -8,13 +8,13 @@ from sqlalchemy.exc import DBAPIError, NoResultFound
 import logging
 from app.routers import exceptions
 
-from app import schemas
+from app.schemas import documents_schemas
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
 def create_new_document(session: Session, 
-                        document_payload: schemas.DocumentCreate) -> models.Documents:
+                        document_payload: documents_schemas.DocumentCreate) -> models.Documents:
     """
     Save document into database
 
@@ -89,7 +89,7 @@ def get_document(session: Session, document_id: UUID) -> models.Documents:
 
 def update_document(session: Session, 
                     document_id: UUID,
-                    update_payload: schemas.DocumentUpdate) -> models.Documents:
+                    update_payload: documents_schemas.DocumentUpdate) -> models.Documents:
     """
     Updates the title/content of the document. Once SQL Alchemy finds a change between the returned document and the new payload,
     it will automatically update the table

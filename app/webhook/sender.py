@@ -4,7 +4,7 @@ import hashlib
 import json
 
 from app.databases.models import Documents
-from app import schemas
+from app.schemas import documents_schemas
 
 from pydantic import ValidationError
 from app.webhook import exceptions
@@ -33,11 +33,11 @@ def create_signature(payload: Documents,
     try:
         logger.info(f"Creating signature for {payload.id}")
 
-        validate_data = schemas.WebhookSignatureSchema(secret_key=secret, payload_docs=payload)
+        validate_data = documents_schemas.WebhookSignatureSchema(secret_key=secret, payload_docs=payload)
 
         secret_key=validate_data.secret_key.encode("utf-8")
         #convert ORM object into bytes
-        validated_document = schemas.DocumentResponse.model_validate(validate_data.payload_docs)
+        validated_document = documents_schemas.DocumentResponse.model_validate(validate_data.payload_docs)
         payload_dict = validated_document.model_dump(mode="json")
         payload_bytes=json.dumps(payload_dict, sort_keys=True).encode("utf-8")
 

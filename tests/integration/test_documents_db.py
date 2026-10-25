@@ -1,6 +1,6 @@
 import pytest
 
-from app import schemas
+from app.schemas import documents_schemas
 from app.routers import documents
 
 @pytest.mark.integration
@@ -37,13 +37,13 @@ class TestUpdateDocumentDB:
     @pytest.mark.parametrize(
     "update_payload_scenario, expected_title, expected_content, expected_version", [
         #CASE 1 - nothing changed
-        (schemas.DocumentUpdate(), "original title", "original content", 1),
+        (documents_schemas.DocumentUpdate(), "original title", "original content", 1),
         #CASE 2 - both content and title changed
-        (schemas.DocumentUpdate(title="changed title", content="changed content"), "changed title", "changed content",2),
+        (documents_schemas.DocumentUpdate(title="changed title", content="changed content"), "changed title", "changed content",2),
         #CASE 3 - partial change, only title
-        (schemas.DocumentUpdate(title="changed title"), "changed title", "original content",2),
+        (documents_schemas.DocumentUpdate(title="changed title"), "changed title", "original content",2),
         #CASE 4 - partial change, only content
-        (schemas.DocumentUpdate(content="changed content"), "original title", "changed content",2)
+        (documents_schemas.DocumentUpdate(content="changed content"), "original title", "changed content",2)
     ]
     )
     def test_update_document_working(self, 

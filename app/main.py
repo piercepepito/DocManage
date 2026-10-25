@@ -1,6 +1,6 @@
 from fastapi import FastAPI, status
 
-from app.schemas import DocumentResponse, DocumentCreate, DocumentUpdate
+from app.schemas.documents_schemas import DocumentResponse, DocumentCreate, DocumentUpdate
 
 from uuid import UUID
 
