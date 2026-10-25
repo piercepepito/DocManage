@@ -96,3 +96,27 @@ class Jobs(Base):
     next_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True),
                                                    nullable=True)
+
+class JobHistory(Base):
+    __tablename__="jobhistory"
+
+    __table_args__ = (
+        CheckConstraint(
+            "status in ('pending','succeeded','in flight','exhausted')",
+            name="check_job_status"
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid,
+                                     primary_key=True,
+                                     server_default=text("gen_random_uuid()"))
+    job_id: Mapped[UUID] = mapped_column(Uuid,
+                                         ForeignKey("jobs.id"),
+                                         nullable=False)
+    attempt_no: Mapped[int] = mapped_column(Integer,
+                                            nullable=False)
+    status: Mapped[JobStatus] = mapped_column(String,
+                                              nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True),
+                                                 nullable=False,
+                                                 server_default=text("now()"))
