@@ -3,7 +3,7 @@ import pytest
 from app.databases.db import get_db
 
 from app.schemas.documents_schemas import DocumentCreate
-from app.schemas import jobs_schemas
+from app.schemas import jobs_schemas, job_history_schemas
 
 from app.databases.models import Documents
 
@@ -65,4 +65,12 @@ def valid_job_update_payload():
         error_message = "This is an error message",
         next_attempt_at = datetime.now(timezone.utc),
         completed_at = datetime.now(timezone.utc)
+    )
+
+@pytest.fixture
+def valid_job_history_payload():
+    return job_history_schemas.JobHistoryCreate(
+        job_id = uuid.uuid4(),
+        attempt_no = 3,
+        status = "pending"
     )
