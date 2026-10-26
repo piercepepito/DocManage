@@ -1,6 +1,7 @@
 from app.schemas import jobs_schemas
 from app.databases import models
 
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import DBAPIError
 
@@ -48,3 +49,48 @@ def create_job_row(job_payload: jobs_schemas.JobCreate,
 
         logger.exception("Unexpected error occured while creating new job")
         raise exceptions.DatabaseStorageError("An unexpected application error occured while creating a new job")
+
+def update_job(session: Session,
+               updated_job:jobs_schemas.JobUpdate) -> models.Jobs:
+    """
+    Updates an existing job. Only a single job id will be updated.
+
+    Args:
+        session: A SQLAlchemy session
+        updated_job: the required payload to update the values inside a specific id
+    Returns:
+        models.Jobs: an ORM object that mimicks the inside of the jobs table
+    Raises:
+        DatabaseStorageError: If a database engine crash or unforeseen runtime exception 
+        prevents the record from being safely committed.
+    """
+    
+    logger.info(f"Updating row of job id: {updated_job.id}")
+
+    try:
+        stmt = select(models.Jobs).where(
+            models.Jobs.id == updated_job.id
+        )
+        existing_job = session.execute(stmt).scalar_one()
+
+        updated_job_values=updated_job.model_dump(exclude_unset=True)
+        for key, value in updated_job_values.items():
+            setattr(existing_job, key, value)
+
+        session.commit()
+        session.refresh(existing_job)
+
+        logger.info("Succesfully updated job")
+        return existing_job
+
+    except DBAPIError as e:
+        session.rollback()
+
+        logger.exception("Database operation failed while updating job")
+        raise exceptions.DatabaseStorageError("Failed to update job due to system error")
+
+    except Exception as e:
+        session.rollback()
+
+        logger.exception("Unexpected application error occured while updating existing job")
+        raise exceptions.DatabaseStorageError("An unexepected error occured while updating job")

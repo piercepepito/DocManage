@@ -8,7 +8,7 @@ from app.schemas import jobs_schemas
 from app.databases.models import Documents
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 @pytest.fixture
 def create_db_session():
@@ -54,4 +54,15 @@ def valid_job_payload():
         error_message = None,
         next_attempt_at = None,
         completed_at = None
+    )
+
+@pytest.fixture
+def valid_job_update_payload():
+    return jobs_schemas.JobUpdate(
+        id = uuid.uuid4(),
+        attempt_no = 3,
+        status = "succeeded",
+        error_message = "This is an error message",
+        next_attempt_at = datetime.now(timezone.utc),
+        completed_at = datetime.now(timezone.utc)
     )

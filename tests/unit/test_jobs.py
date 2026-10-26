@@ -38,4 +38,36 @@ class TestCreateJob:
 
         mock_session.rollback.assert_called_once_with()
 
+class TestUpdateJob:
 
+    @patch("app.databases.jobs.Session")
+    def test_job_update_db_error(self, mock_session, valid_job_update_payload):
+
+        mock_session.execute.return_value.scalar_one.side_effect = DBAPIError(
+            statement= "",
+            params = [],
+            orig=Exception("unable to connect to database")
+        )
+
+        with pytest.raises(exceptions.DatabaseStorageError) as e:
+            jobs.update_job(session=mock_session,
+                            updated_job=valid_job_update_payload)
+
+        assert "Failed to update job due to system error" in str(e.value)
+
+        mock_session.rollback.assert_called_once_with()
+
+    @patch("app.databases.jobs.Session")
+    def test_job_exception(self, mock_session, valid_job_update_payload):
+
+        mock_session.execute.return_value.scalar_one.side_effect = Exception()
+
+        with pytest.raises(exceptions.DatabaseStorageError) as e:
+            jobs.update_job(
+                session = mock_session,
+                updated_job= valid_job_update_payload
+            )
+
+        assert "An unexepected error occured while updating job" in str(e.value)
+
+        mock_session.rollback.assert_called_once_with()
