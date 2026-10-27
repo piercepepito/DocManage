@@ -5,6 +5,10 @@ import pytest
 from unittest.mock import Mock, patch
 from app.webhook import exceptions
 
+from pydantic import ValidationError
+
+import requests
+
 import secrets
 
 class TestWebhookSignature:
@@ -81,3 +85,61 @@ class TestWebhookSignature:
                                     payload=valid_create_doc_history_payload)
 
         assert "An unexpected error occured while creating signature" in str(e.value)
+
+
+class TestSendPayload:
+    @patch("app.webhook.sender.requests.post")
+    def test_succesful_send(self, mock_request_post, valid_create_doc_history_payload):
+        mock_response = Mock()
+        mock_request_post.return_value = mock_response
+
+        response = sender.send_payload(valid_create_doc_history_payload)
+
+        assert response == mock_response
+
+    @patch("app.webhook.sender.requests.post")
+    def test_http_error(self, mock_request_post, valid_create_doc_history_payload):
+
+        mock_request_post.return_value = Mock()
+        mock_request_post.return_value.raise_for_status.side_effect = requests.exceptions.HTTPError()
+
+        with pytest.raises(requests.exceptions.HTTPError):
+            sender.send_payload(payload=valid_create_doc_history_payload)
+
+        mock_request_post.assert_called_once()
+        mock_request_post.return_value.raise_for_status.assert_called_once_with()
+
+    @patch("app.webhook.sender.requests.post")
+    def test_connection_error(self, mock_request_post, valid_create_doc_history_payload):
+        mock_request_post.side_effect = requests.exceptions.ConnectionError()
+
+        with pytest.raises(requests.exceptions.ConnectionError): 
+            sender.send_payload(payload=valid_create_doc_history_payload)
+
+        mock_request_post.return_value.raise_for_status.assert_not_called()
+
+    @patch("app.webhook.sender.requests.post")
+    def test_timeout_error(self, mock_request_post, valid_create_doc_history_payload):
+
+        mock_request_post.side_effect = requests.exceptions.Timeout
+
+        with pytest.raises(requests.exceptions.Timeout):
+            sender.send_payload(payload=valid_create_doc_history_payload)
+
+
+        mock_request_post.return_value.raise_for_status.assert_not_called()
+
+    @patch("app.webhook.sender.requests.post")
+    def test_request_exception(self, mock_request_post, valid_create_doc_history_payload):
+
+        mock_request_post.side_effect = requests.exceptions.RequestException()
+
+        with pytest.raises(requests.exceptions.RequestException):
+            sender.send_payload(valid_create_doc_history_payload)
+
+        mock_request_post.raise_for_status.assert_not_called()
+
+
+        
+        
+    #succesful

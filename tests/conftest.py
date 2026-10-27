@@ -74,3 +74,9 @@ def valid_job_history_payload():
         attempt_no = 3,
         status = "pending"
     )
+
+@pytest.fixture
+def invalid_send_message_payload():
+    return Documents(
+        id="invalid input"
+    )
