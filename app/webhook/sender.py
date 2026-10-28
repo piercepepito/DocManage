@@ -88,7 +88,7 @@ def send_payload(payload: Documents) -> requests.Response:
 
     try:
         #create unix timestamp
-        timestamp = int(time.time())
+        timestamp = str(time.time())
         #create signature
         signature = create_signature(payload)
         

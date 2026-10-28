@@ -53,7 +53,6 @@ class TestWebhookSignature:
     @patch("app.webhook.sender.documents_schemas")
     def test_unicode_error(self, mock_schema, valid_create_doc_history_payload):
         mock_schema.DocumentResponse.model_validate.side_effect = UnicodeError()
-        
         secret_key = secrets.token_hex(32)
         
         with pytest.raises(exceptions.WebhookSignatureError) as e:
