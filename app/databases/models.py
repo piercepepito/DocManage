@@ -86,6 +86,8 @@ class Jobs(Base):
     document_id: Mapped[UUID] = mapped_column(Uuid,
                                               ForeignKey("documents.id"),
                                               nullable=False)
+    celery_task_id:Mapped[UUID] = mapped_column(Uuid,
+                                                nullable=False)
     attempt_no: Mapped[int] = mapped_column(Integer,
                                             nullable=False,
                                             server_default=text("1"))

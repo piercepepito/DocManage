@@ -10,6 +10,7 @@ class JobCreate(BaseModel):
     document_id: UUID
     attempt_no: int
     status: JobStatus = "pending"
+    celery_task_id: UUID
     error_message: Optional[str] = None
     next_attempt_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
@@ -19,5 +20,5 @@ class JobUpdate(BaseModel):
     attempt_no: int
     status: JobStatus
     error_message: str
-    next_attempt_at: datetime
+    next_attempt_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None

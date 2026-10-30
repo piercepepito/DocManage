@@ -51,6 +51,7 @@ def valid_job_payload():
         document_id = uuid.uuid4(),
         attempt_no = 2,
         status = "pending",
+        celery_task_id=uuid.uuid4(),
         error_message = None,
         next_attempt_at = None,
         completed_at = None
