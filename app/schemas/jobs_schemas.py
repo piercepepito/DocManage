@@ -19,6 +19,7 @@ class JobUpdate(BaseModel):
     id:UUID
     attempt_no: int
     status: JobStatus
+    celery_task_id:UUID 
     error_message: str
     next_attempt_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None

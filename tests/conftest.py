@@ -63,6 +63,7 @@ def valid_job_update_payload():
         id = uuid.uuid4(),
         attempt_no = 3,
         status = "succeeded",
+        celery_task_id=uuid.uuid4(),
         error_message = "This is an error message",
         next_attempt_at = datetime.now(timezone.utc),
         completed_at = datetime.now(timezone.utc)
