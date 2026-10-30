@@ -2,6 +2,8 @@ from app.databases import jobs
 from app.routers import documents
 import pytest
 
+from app.databases.models import Jobs
+
 class TestJobCreateDB:
     def test_create_new_job(self, valid_job_payload, valid_create_document_payload, create_db_session):
         new_document = documents.create_new_document(session=create_db_session,
@@ -47,3 +49,21 @@ class TestJobUpdateDB:
         assert update_job.error_message == valid_job_update_payload.error_message
         assert update_job.next_attempt_at == valid_job_update_payload.next_attempt_at
         assert update_job.completed_at == valid_job_update_payload.completed_at
+
+class TestGetJob:
+    def test_successful_celery_id(self, create_db_session, 
+                                    valid_job_payload, valid_create_document_payload):
+
+        new_document = documents.create_new_document(session=create_db_session,
+                                                                document_payload=valid_create_document_payload)
+        
+        valid_job_payload.document_id = new_document.id
+        
+        new_job = jobs.create_job_row(job_payload=valid_job_payload,
+                                                session=create_db_session)
+
+        job_result = jobs.get_job_by_celery_task(session=create_db_session,
+                                    celery_task_id=new_job.celery_task_id)
+
+        assert isinstance(job_result, Jobs)
+        assert job_result.celery_task_id == valid_job_payload.celery_task_id

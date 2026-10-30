@@ -1,6 +1,7 @@
 import pytest
 
 from unittest.mock import patch
+import uuid
 
 from app.databases import jobs
 from app.routers import exceptions
@@ -71,3 +72,33 @@ class TestUpdateJob:
         assert "An unexepected error occured while updating job" in str(e.value)
 
         mock_session.rollback.assert_called_once_with()
+
+class TestRetrieveJob:
+    @patch("app.databases.jobs.Session")
+    def test_dbapi_error(self, mock_session):
+        mock_session.execute.side_effect = DBAPIError(
+            statement= "",
+            params = [],
+            orig=Exception("unable to connect to database")
+        )
+
+        celery_id=uuid.uuid4()
+
+        with pytest.raises(exceptions.DatabaseStorageError) as e:
+            jobs.get_job_by_celery_task(session=mock_session,
+                                        celery_task_id=celery_id
+                                        )
+
+        assert "An error occured while retrieving data from job table" in str(e.value)
+
+    @patch("app.databases.jobs.Session")
+    def test_exception_error(self, mock_session):
+        mock_session.execute.side_effect=Exception()
+
+        celery_id=uuid.uuid4()
+
+        with pytest.raises(exceptions.DatabaseStorageError) as e:
+            jobs.get_job_by_celery_task(session=mock_session,
+                                        celery_task_id=celery_id)
+
+        assert "Unexpected applciation error occured while retrieving data from Jobs table" in str(e.value)
