@@ -107,3 +107,66 @@ class TestGetDoc:
         )
 
         response.status_code==500
+
+class TestUpdateDocument:
+    @patch("app.main.documents")
+    def test_db_api_error(self, mock_document,
+                          create_db_session, valid_create_document_payload):
+        mock_document.update_document.side_effect = DBAPIError(
+            statement= "",
+            params = [],
+            orig=Exception("unable to connect to database")
+        )
+
+        mock_id = uuid.uuid4()
+        with pytest.raises(HTTPException) as e:
+            main.edit_document(session=create_db_session,
+                               document_id=mock_id,
+                               document=valid_create_document_payload)
+
+        assert e.value.status_code==500
+        assert e.value.detail=="unable to save document. please try again later."
+
+    @patch("app.main.documents")
+    def test_stale_data(self, mock_document,
+                        create_db_session, valid_create_document_payload):
+
+        mock_document.update_document.side_effect=StaleDataError()
+
+        mock_id=uuid.uuid4()
+        with pytest.raises(HTTPException) as e:
+            main.edit_document(session=create_db_session,
+                               document=valid_create_document_payload,
+                               document_id=mock_id)
+
+        assert e.value.status_code==409
+        assert e.value.detail=="unable to update because of stale data"
+
+    @patch("app.main.documents")
+    def test_no_result_found(self, mock_document,
+                             create_db_session, valid_create_document_payload):
+        mock_document.update_document.side_effect=NoResultFound()
+
+        mock_id=uuid.uuid4()
+        with pytest.raises(HTTPException) as e:
+            main.edit_document(session=create_db_session,
+                               document_id=mock_id,
+                               document=valid_create_document_payload)
+
+        assert e.value.status_code==404
+        assert e.value.detail=="unable to find the document"
+
+    @patch("app.main.documents")
+    def test_general_exception(self, mock_document, valid_create_document_payload):
+
+        mock_document.update_document.side_effect=Exception()
+
+        mock_id=uuid.uuid4()
+
+        input_payload=documents_schemas.DocumentCreate.model_validate(valid_create_document_payload).model_dump(mode="json")
+        response = client.patch(
+            f"documents/{mock_id}",
+            json=input_payload
+        )
+        
+        assert response.status_code==500

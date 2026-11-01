@@ -7,6 +7,7 @@ from fastapi.testclient import TestClient
 
 client = TestClient(app=main.client_api)
 
+@pytest.mark.integration
 class TestCreateDocumentDB:
     def test_successful(self, valid_create_document_payload):
 
@@ -27,6 +28,7 @@ class TestCreateDocumentDB:
         assert response_data["title"] == valid_create_document_payload.title
         assert response_data["content"] == valid_create_document_payload.content
 
+@pytest.mark.integration
 class TestGetDocumentDB:
     def test_get_succesful_id(self, valid_create_document_payload):
         new_document_payload=(documents_schemas.DocumentCreate
@@ -46,3 +48,32 @@ class TestGetDocumentDB:
         assert response.status_code==200
         assert recieved_document["title"]==valid_create_document_payload.title
         assert recieved_document["content"]==valid_create_document_payload.content
+
+@pytest.mark.integration
+class TestUpdateDocument:
+    def test_succesful(self, valid_create_document_payload):
+        input_payload=(
+            documents_schemas
+            .DocumentCreate
+            .model_validate(valid_create_document_payload)
+            .model_dump(mode="json")
+        )
+        new_document=client.post(
+            "/documents",
+            json=input_payload
+        )
+        doc_response=new_document.json()
+        document_id=doc_response["id"]
+        
+        input_payload["title"]="this is a new title"
+        input_payload["content"]="this is new content"
+        response = client.patch(
+            f"/documents/{document_id}",
+            json=input_payload
+        )
+        response_data=response.json()
+
+        assert response.status_code==200
+
+        assert response_data["title"]==input_payload["title"]
+        assert response_data["content"]==input_payload["content"]

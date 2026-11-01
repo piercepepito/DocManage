@@ -121,11 +121,42 @@ def get_document(
                 response_model=DocumentResponse)
 def edit_document(
     document_id: UUID,
-    document: DocumentUpdate
+    document: DocumentUpdate,
+    session: Session = Depends(db.get_db)
     ):
     """
     Update document and increment its version
 
     Send document-update webhooks to DocView when a document changes.
     """
-    pass
+    logging.info(f"Updating existing document: {document_id}")
+    try:
+        response=documents.update_document(session=session,
+                                           document_id=document_id,
+                                           update_payload=document)
+
+        document_history.create_document_history(session=session, document_payload=response)
+        
+        logging.info("Successfully updateed document")
+        return response
+    
+    except StaleDataError as e:
+        logger.exception("Stale data while trying to update it.")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="unable to update because of stale data"
+        )
+
+    except NoResultFound as e:
+        logger.exception("unabel to find the document")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="unable to find the document"
+        )
+
+    except DBAPIError as e:
+        logger.exception("Unable to update document due to a server error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="unable to save document. please try again later."
+        )
