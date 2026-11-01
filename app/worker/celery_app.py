@@ -10,7 +10,8 @@ BROKER_HOST = "redis" if IN_DOCKER else "localhost"
 generic_url = f'redis://{BROKER_HOST}:6379/0'
 
 
-celery_app = Celery("sender_worker")
+celery_app = Celery("sender_worker",
+                    include=["app.worker.tasks.webhook_tasks"])
 
 celery_app.conf.update(
     broker_url= generic_url,
@@ -19,5 +20,3 @@ celery_app.conf.update(
     task_time_limit = config.TASK_TIME_LIMIT,
     result_expires=config.RESULT_EXPIRES
 )
-
-celery_app.autodiscover_tasks(["app//worker"])
