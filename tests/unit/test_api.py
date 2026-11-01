@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from app import main
 
-from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import DBAPIError, NoResultFound
 from sqlalchemy.orm.exc import StaleDataError
 
 from fastapi import HTTPException
@@ -11,10 +11,11 @@ from fastapi.testclient import TestClient
 
 from app.schemas import documents_schemas
 
+import uuid
+
 client = TestClient(app=main.client_api, raise_server_exceptions=False)
 
 class TestCreateDoc:
-    
     @patch("app.main.documents")
     def test_db_api_error(self, mock_documents,
                           create_db_session, valid_create_document_payload):
@@ -64,3 +65,45 @@ class TestCreateDoc:
 
         assert response_data["error"]["code"] == "Internal server error"
         assert response_data["error"]["message"] == "unexpected error occurred"
+
+class TestGetDoc:
+    @patch("app.main.documents")
+    def test_db_api_error(self, mock_documents, create_db_session):
+        mock_documents.get_document.side_effect = DBAPIError(
+            statement= "",
+            params = [],
+            orig=Exception("unable to connect to database")
+        )
+
+        mock_doc_id = uuid.uuid4()
+        with pytest.raises(HTTPException) as e:
+            main.get_document(document_id=mock_doc_id,
+                              db=create_db_session)
+
+        assert e.value.status_code==500
+        assert e.value.detail=="Unable to reach for document due to internal server error"
+
+    @patch("app.main.documents")
+    def test_no_result_found_error(self, mock_document,
+                                   create_db_session):
+        
+        mock_document.get_document.side_effect=NoResultFound("Unable to find document")
+
+        mock_id=uuid.uuid4()
+        with pytest.raises(HTTPException) as e:
+            main.get_document(db=create_db_session,
+                              document_id=mock_id)
+
+        assert e.value.status_code==404
+        assert e.value.detail==f"Unable to find document: {mock_id}"
+
+    @patch("app.main.documents")
+    def test_general_exception(self, mock_document):
+        mock_document.get_document.side_effect=Exception()
+        
+        mock_id=uuid.uuid4()
+        response = client.get(
+            f"documents/{mock_id}"
+        )
+
+        response.status_code==500

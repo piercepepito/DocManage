@@ -89,10 +89,31 @@ def create_document(document:DocumentCreate,
 
 @client_api.get("/documents/{document_id}",
                 status_code=status.HTTP_200_OK,
-                model_response=DocumentResponse)
+                response_model=DocumentResponse)
 def get_document(
-    document_id: UUID
-)
+    document_id: UUID,
+    db:Session = Depends(db.get_db)
+):
+    logger.info(f"Searching for document: {document_id}")
+    try:
+        response=documents.get_document(session=db, document_id=document_id)
+
+        logger.info("Document succesfully found")
+        return response
+    
+    except NoResultFound as e:
+        logger.exception("Document cannot be found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Unable to find document: {document_id}"
+        )
+
+    except DBAPIError as e:
+        logger.exception("Database error occured while searching for document")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to reach for document due to internal server error"
+        )
     
 
 @client_api.patch("/documents/{document_id}",

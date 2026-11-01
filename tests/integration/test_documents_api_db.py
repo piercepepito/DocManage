@@ -26,3 +26,23 @@ class TestCreateDocumentDB:
 
         assert response_data["title"] == valid_create_document_payload.title
         assert response_data["content"] == valid_create_document_payload.content
+
+class TestGetDocumentDB:
+    def test_get_succesful_id(self, valid_create_document_payload):
+        new_document_payload=(documents_schemas.DocumentCreate
+                              .model_validate(valid_create_document_payload)
+                              .model_dump(mode="json"))
+        new_document=client.post(
+           "/documents",
+           json= new_document_payload
+        )
+
+        new_document_response=new_document.json()
+        document_id=new_document_response["id"]
+
+        response=client.get(f"/documents/{document_id}")
+        recieved_document=response.json()
+
+        assert response.status_code==200
+        assert recieved_document["title"]==valid_create_document_payload.title
+        assert recieved_document["content"]==valid_create_document_payload.content
