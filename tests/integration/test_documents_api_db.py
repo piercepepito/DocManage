@@ -1,5 +1,7 @@
 import pytest
 
+from app.routers import documents
+
 from app.schemas import documents_schemas
 from app import main
 
@@ -77,3 +79,25 @@ class TestUpdateDocument:
 
         assert response_data["title"]==input_payload["title"]
         assert response_data["content"]==input_payload["content"]
+
+class TestGetSpecificVersion:
+
+    def test_get_succesful(self, create_db_session, valid_create_document_payload):
+        new_document=documents.create_new_document(create_db_session, valid_create_document_payload)
+                
+        update_payload_scenario=documents_schemas.DocumentUpdate(title="changed title", content="changed content")
+        updated_document = documents.update_document(session = create_db_session,
+                                                    document_id= new_document.id,
+                                                    update_payload=update_payload_scenario)
+
+        document_id=updated_document.id
+        version_number=updated_document.version
+        response = client.get(
+            f"/documents/{document_id}/version/{version_number}"
+        )
+
+        response_data = response.json()
+
+        assert response.status_code == 202
+        assert response_data["id"] == str(document_id)
+        assert response_data["version"] == int(version_number)
