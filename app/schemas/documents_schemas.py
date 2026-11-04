@@ -32,6 +32,12 @@ class DocumentUpdate(BaseModel):
     title: str | None = None
     content: str | None = None
 
+class DocumentHistResponse(BaseModel):
+    document_id: UUID
+    version: int
+    title: str
+    content: str
+
 class WebhookSignatureSchema(BaseModel):
     """
     The validation schema used for app.webhook.sender py, create_signature function

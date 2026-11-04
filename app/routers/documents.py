@@ -92,9 +92,9 @@ def get_specific_document_version(version: int,
                                   session: Session) -> models.Documents:
     logger.info(f"Retrieving the document with id: {document_id} and version: {str(version)}")
     try:
-        stmt = select(models.Documents).where(
-            models.Documents.id == document_id,
-            models.Documents.version == version
+        stmt = select(models.DocumentHistory).where(
+            models.DocumentHistory.document_id == document_id,
+            models.DocumentHistory.version == version
         )
 
         document_retrieved_version = session.execute(stmt).scalar_one()

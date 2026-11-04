@@ -80,18 +80,23 @@ class TestUpdateDocument:
         assert response_data["title"]==input_payload["title"]
         assert response_data["content"]==input_payload["content"]
 
+@pytest.mark.integration
 class TestGetSpecificVersion:
 
-    def test_get_succesful(self, create_db_session, valid_create_document_payload):
-        new_document=documents.create_new_document(create_db_session, valid_create_document_payload)
-                
-        update_payload_scenario=documents_schemas.DocumentUpdate(title="changed title", content="changed content")
-        updated_document = documents.update_document(session = create_db_session,
-                                                    document_id= new_document.id,
-                                                    update_payload=update_payload_scenario)
+    def test_get_succesful(self, valid_create_document_payload):
+        input_payload = (documents_schemas
+                         .DocumentCreate
+                         .model_validate(valid_create_document_payload)
+                         .model_dump(mode="json"))
 
-        document_id=updated_document.id
-        version_number=updated_document.version
+        new_document = client.post(
+            "/documents",
+            json=input_payload
+        )
+        new_document_response = new_document.json()
+
+        document_id=new_document_response["id"]
+        version_number=1
         response = client.get(
             f"/documents/{document_id}/version/{version_number}"
         )
@@ -99,5 +104,5 @@ class TestGetSpecificVersion:
         response_data = response.json()
 
         assert response.status_code == 202
-        assert response_data["id"] == str(document_id)
+        assert response_data["document_id"] == str(document_id)
         assert response_data["version"] == int(version_number)
