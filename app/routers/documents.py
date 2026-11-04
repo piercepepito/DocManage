@@ -56,7 +56,7 @@ def create_new_document(session: Session,
 
 def get_document(session: Session, document_id: UUID) -> models.Documents:
     """
-    Retrieves the contents of the document
+    Retrieves the contents of the document and all of its versions
 
     Args:
         document_id
@@ -68,15 +68,22 @@ def get_document(session: Session, document_id: UUID) -> models.Documents:
                 prevents the record from being retrieved.
     """
     try:
-        stmt = select(models.Documents).where(
-            models.Documents.id == document_id
+        stmt = select(models.DocumentHistory).where(
+            models.DocumentHistory.document_id == document_id
             )
         result=session.execute(stmt)
 
-        return result.scalar_one()
-    
+        data_retrieved = result.scalars().all()
+
+        print(data_retrieved)
+
+        if not data_retrieved:
+            logger.exception(f"Document lookup failed from id: {document_id}")
+            raise NoResultFound
+
+        return data_retrieved
+
     except NoResultFound as e:
-        logger.exception(f"Document lookup failed from id: {document_id}")
         raise exceptions.NoDocumentFound(f"Unable to find document id: {document_id}")
     
     except DBAPIError as e:

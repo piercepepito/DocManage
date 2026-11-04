@@ -51,7 +51,7 @@ class TestGetDocument:
         """
         random_uuid = uuid.uuid4()
 
-        mock_session.execute.return_value.scalar_one.side_effect = NoResultFound()
+        mock_session.execute.return_value.scalars.return_value.all.return_value = []
 
         with pytest.raises(exceptions.NoDocumentFound) as e:
                 documents.get_document(mock_session, document_id=random_uuid)
@@ -62,7 +62,7 @@ class TestGetDocument:
     def test_database_error(self, mock_session):
         random_uuid = uuid.uuid4()
 
-        mock_session.execute.return_value.scalar_one.side_effect = DBAPIError(
+        mock_session.execute.return_value.scalars.return_value.all.side_effect = DBAPIError(
             statement="",
             params=[],
             orig=Exception("database error occured while retrieving document")
@@ -78,7 +78,7 @@ class TestGetDocument:
     def test_general_exception(self, mock_session):
         random_uuid = uuid.uuid4()
 
-        mock_session.execute.return_value.scalar_one.side_effect = Exception()
+        mock_session.execute.return_value.scalars.return_value.all.side_effect = Exception()
 
         with pytest.raises(exceptions.DatabaseStorageError) as e:
             documents.get_document(session=mock_session,

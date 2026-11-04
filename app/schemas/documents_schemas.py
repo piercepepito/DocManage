@@ -33,10 +33,15 @@ class DocumentUpdate(BaseModel):
     content: str | None = None
 
 class DocumentHistResponse(BaseModel):
+    model_config= ConfigDict(from_attributes=True)
+    
     document_id: UUID
     version: int
     title: str
     content: str
+
+class GetDocumentHistory(BaseModel):
+    docs: list[DocumentHistResponse]   
 
 class WebhookSignatureSchema(BaseModel):
     """

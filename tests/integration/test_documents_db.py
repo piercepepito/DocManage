@@ -22,15 +22,16 @@ class TestGetDocumentDB:
         """
         validates if the function properl gets the document
         """
-        new_document= documents.create_new_document(session=create_db_session, 
-                                                    document_payload=valid_create_document_payload)
+        new_document = documents.create_new_document(session= create_db_session, document_payload=valid_create_document_payload)
+        
+        history_event = document_history.create_document_history(session= create_db_session, document_payload=new_document)
         
         retrieve_document = documents.get_document(session=create_db_session,
                                                    document_id=new_document.id)
 
-        assert retrieve_document.id == new_document.id
-        assert retrieve_document.title == valid_create_document_payload.title
-        assert retrieve_document.content == valid_create_document_payload.content
+        assert retrieve_document[0].id == history_event.id
+        assert retrieve_document[0].title == valid_create_document_payload.title
+        assert retrieve_document[0].content == valid_create_document_payload.content
 
 @pytest.mark.integration
 class TestUpdateDocumentDB:

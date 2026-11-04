@@ -1,7 +1,7 @@
 from fastapi import FastAPI, status, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 
-from app.schemas.documents_schemas import DocumentResponse, DocumentCreate, DocumentUpdate, DocumentHistResponse
+from app.schemas.documents_schemas import DocumentResponse, DocumentCreate, DocumentUpdate, DocumentHistResponse, GetDocumentHistory
 from app.schemas import services_schemas
 
 from app.databases import db
@@ -96,7 +96,7 @@ def create_document(document:DocumentCreate,
 
 @client_api.get("/documents/{document_id}",
                 status_code=status.HTTP_200_OK,
-                response_model=DocumentResponse)
+                response_model=GetDocumentHistory)
 def get_document(
     document_id: UUID,
     db:Session = Depends(db.get_db)
@@ -106,7 +106,7 @@ def get_document(
         response=documents.get_document(session=db, document_id=document_id)
 
         logger.info("Document succesfully found")
-        return response
+        return GetDocumentHistory(docs=response)
     
     except NoResultFound as e:
         logger.exception("Document cannot be found")

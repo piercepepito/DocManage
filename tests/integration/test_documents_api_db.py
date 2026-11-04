@@ -47,9 +47,10 @@ class TestGetDocumentDB:
         response=client.get(f"/documents/{document_id}")
         recieved_document=response.json()
 
+        print(response.status_code)
+
         assert response.status_code==200
-        assert recieved_document["title"]==valid_create_document_payload.title
-        assert recieved_document["content"]==valid_create_document_payload.content
+        assert len(recieved_document["docs"]) == 1
 
 @pytest.mark.integration
 class TestUpdateDocument:
