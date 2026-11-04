@@ -1,11 +1,13 @@
 from fastapi import FastAPI, status, HTTPException, Request, Depends
 from fastapi.responses import JSONResponse
 
-from app.schemas.documents_schemas import DocumentResponse, DocumentCreate, DocumentUpdate
+from app.schemas.documents_schemas import DocumentResponse, DocumentCreate, DocumentUpdate, DocumentHistResponse
+from app.schemas import services_schemas
 
 from app.databases import db
 
 from app.routers import documents, document_history
+from app.services import document_diff
 from app.databases import models
 
 from sqlalchemy.exc import DBAPIError, NoResultFound
@@ -33,7 +35,7 @@ client_api = FastAPI(
 )
 
 @client_api.exception_handler(Exception)
-async def global_exception_handler(
+def global_exception_handler(
     request: Request,
     exc: Exception
 ):
@@ -163,7 +165,7 @@ def edit_document(
 
 @client_api.get(
     "/documents/{document_id}/version/{version_number}",
-    response_model=DocumentResponse,
+    response_model=DocumentHistResponse,
     status_code=status.HTTP_202_ACCEPTED
 )
 def get_specific_version_document(version_number: int,
@@ -190,4 +192,49 @@ def get_specific_version_document(version_number: int,
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unable to process due to an internal server error"
+        )
+    
+@client_api.get(
+    "/documents/{document_id}/versions/diff",
+    response_model= services_schemas.DocDiffCreated,
+    status_code = status.HTTP_200_OK,
+)
+def create_doc_diff(document_id: UUID,
+                    old_version: int,
+                    new_version: int,
+                    session: Session = Depends(db.get_db)):
+    logger.info(f"Retrieving document id: {document_id} of the following versions: {old_version} and {new_version}")
+    try:
+        old_doc=documents.get_specific_document_version(version=old_version,
+                                                        document_id=document_id,
+                                                        session=session)
+        new_doc=documents.get_specific_document_version(version=new_version,
+                                                        document_id=document_id,
+                                                        session=session)
+
+        doc_diff = document_diff.compare_docs(old_document=old_doc,
+                                              new_document=new_doc)
+
+        logger.info("Succesfully recieved specific version of the document")
+        
+        response = {
+            "document_id":document_id,
+            "old_version": old_version,
+            "new_version": new_version,
+            "doc_diff":doc_diff
+        }
+
+        return response
+    
+    except NoResultFound as e:
+        logger.exception("No data returned while retrieving document")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Unable to find the data given the document id and version"
+        )
+    except DBAPIError as e:
+        logger.exception("Database error occured while retrieving data")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="error occured while retrieving the data"
         )
