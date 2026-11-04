@@ -170,3 +170,37 @@ class TestUpdateDocument:
         )
         
         assert response.status_code==500
+
+class TestGetSpecificVersionDoc:
+    @patch("app.main.documents")
+    def test_no_result_found(self, mock_document):
+        mock_document.get_specific_document_version.side_effect=NoResultFound()
+
+        mock_session = Mock()
+
+        mock_doc_id = uuid.uuid4()
+        with pytest.raises(HTTPException) as e: 
+            main.get_specific_version_document(version_number=3,
+                                               document_id= mock_doc_id,
+                                               session=mock_session)
+
+        assert e.value.status_code == 404
+        assert e.value.detail == "Unable to find the data. Please check the document id or the version"
+
+    @patch("app.main.documents")
+    def test_db_error(self, mock_document):
+        mock_document.get_specific_document_version.side_effect=DBAPIError(
+            statement= "",
+            params = [],
+            orig=Exception("unable to connect to database")
+        )
+        mock_session=Mock()
+
+        mock_doc_id = uuid.uuid4()
+        with pytest.raises(HTTPException) as e:
+            main.get_specific_version_document(version_number=3,
+                                                document_id=mock_doc_id,
+                                                session=mock_session)
+
+        assert e.value.status_code == 500
+        assert e.value.detail == "Unable to process due to an internal server error"

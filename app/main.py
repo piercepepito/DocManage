@@ -160,3 +160,34 @@ def edit_document(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="unable to save document. please try again later."
         )
+
+@client_api.get(
+    "/documents/{document_id}/version/{version_number}",
+    response_model=DocumentResponse,
+    status_code=status.HTTP_202_ACCEPTED
+)
+def get_specific_version_document(version_number: int,
+                                  document_id: UUID,
+                                  session: Session = Depends(db.get_db)):
+    logger.info(f"Retrieving document id: {document_id} of version {version_number}")
+    try:
+        retrieved_specific_document=documents.get_specific_document_version(version=version_number,
+                                                                            document_id=document_id,
+                                                                            session=session)
+
+        logger.info("Succesfully retrieved document")
+        return retrieved_specific_document
+    
+    except NoResultFound as e:
+        logger.exception("No result found while searching for the document")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Unable to find the data. Please check the document id or the version"
+        )
+
+    except DBAPIError as e:
+        logger.exception("Unable to process due to an internal server error")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to process due to an internal server error"
+        )

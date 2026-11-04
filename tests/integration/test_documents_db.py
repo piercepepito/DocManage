@@ -69,6 +69,7 @@ class TestUpdateDocumentDB:
         assert result.content == expected_content
         assert result.version == expected_version
 
+@pytest.mark.integration
 class TestGetSpecificDocumentVersionDB:
     def test_specific_version_succesful(self, create_db_session, valid_create_document_payload):
         new_document=documents.create_new_document(create_db_session, valid_create_document_payload)
