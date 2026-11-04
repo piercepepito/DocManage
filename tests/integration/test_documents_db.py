@@ -1,7 +1,7 @@
 import pytest
 
 from app.schemas import documents_schemas
-from app.routers import documents
+from app.routers import documents, document_history
 
 @pytest.mark.integration
 class TestCreateDocumentDB:
@@ -72,15 +72,20 @@ class TestUpdateDocumentDB:
 @pytest.mark.integration
 class TestGetSpecificDocumentVersionDB:
     def test_specific_version_succesful(self, create_db_session, valid_create_document_payload):
-        new_document=documents.create_new_document(create_db_session, valid_create_document_payload)
+        """new_document=documents.create_new_document(create_db_session, valid_create_document_payload)
         
         update_payload_scenario=documents_schemas.DocumentUpdate(title="changed title", content="changed content")
         updated_document = documents.update_document(session = create_db_session,
                                                    document_id= new_document.id,
                                                    update_payload=update_payload_scenario)
+        """        
+
+        new_document = documents.create_new_document(session= create_db_session, document_payload=valid_create_document_payload)
         
-        result = documents.get_specific_document_version(version = updated_document.version,
-                                                         document_id = updated_document.id,
+        history_event = document_history.create_document_history(session= create_db_session, document_payload=new_document)
+        
+        result = documents.get_specific_document_version(version = history_event.version,
+                                                         document_id = new_document.id,
                                                          session=create_db_session)
 
-        assert result.version == updated_document.version
+        assert result.version == history_event.version
