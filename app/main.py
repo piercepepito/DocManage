@@ -59,9 +59,14 @@ def global_exception_handler(
 def create_document(document:DocumentCreate, 
                     db:Session = Depends(db.get_db)):
     """
-    Creates document and assign each document an intial ID and version
+    Creates document and assign each document an intial ID and version. Also updates the Docoument History table.
 
-    No webhook; discover it on the first preview reques
+    Args:
+        document: a pydantic object
+        db: a sqlalchemy session
+    Raises:
+        HTTPException (500): An internal server error whenever something wrong happened while trying to create anew row inside the database
+        HTTPException (409): An error occuring while trying to update the document history table
     """
     logger.info("Creating a document")
     try:
@@ -127,9 +132,18 @@ def edit_document(
     session: Session = Depends(db.get_db)
     ):
     """
-    Update document and increment its version
+    Update document and increment its version. Updates the existing document id data (content and title) and creates a new document history row.
 
-    Send document-update webhooks to DocView when a document changes.
+    Args:
+        document_id: the document being reffered to
+        document: the actual document
+        session: A sqlaclhemy sesion
+    Raises:
+        HTTPException(409): Whenever a concurrency issue of two people saving the document at the same time
+        HTTPException(404): Unable to find the proper document
+        HTTPException(500): A databases error that occured while trying to update both document and document history tables
+
+    
     """
     logging.info(f"Updating existing document: {document_id}")
     try:
@@ -171,6 +185,17 @@ def edit_document(
 def get_specific_version_document(version_number: int,
                                   document_id: UUID,
                                   session: Session = Depends(db.get_db)):
+    """
+    Gets the speicified version of a document
+
+    Args:
+        version_number: the version being specified
+        document_id: the document being searched for
+        session: a sqlaclhemy sesion
+    Raises:
+        HTTPException (404): Cannot find the document from the document id and version number combintation
+        HTTPException (500): Whenever a database error occured while treying to retrieve the document
+    """
     logger.info(f"Retrieving document id: {document_id} of version {version_number}")
     try:
         retrieved_specific_document=documents.get_specific_document_version(version=version_number,
@@ -203,6 +228,19 @@ def create_doc_diff(document_id: UUID,
                     old_version: int,
                     new_version: int,
                     session: Session = Depends(db.get_db)):
+    """
+    Get the difference between 2 version of the same document
+
+    Args:
+        document_id: the id of teh document 
+        old_version: the version being compared as reference point
+        new_version: the version being compared to
+        session: a SQLAlchemy Session
+    Raises:
+        HTTPException (404): Whenever the combintation of both document id and version does not exist
+        HTTPException (500): An internal database error while trying to retrieve the data
+    
+    """
     logger.info(f"Retrieving document id: {document_id} of the following versions: {old_version} and {new_version}")
     try:
         old_doc=documents.get_specific_document_version(version=old_version,
