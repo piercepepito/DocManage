@@ -87,6 +87,33 @@ def get_document(session: Session, document_id: UUID) -> models.Documents:
         logger.exception("Unexpected error occured during document retrieval")
         raise exceptions.DatabaseStorageError("An unexepected application error occurred while retrieving document")
 
+def get_specific_document_version(version: int,
+                                  document_id: UUID,
+                                  session: Session) -> models.Documents:
+    logger.info(f"Retrieving the document with id: {document_id} and version: {str(version)}")
+    try:
+        stmt = select(models.Documents).where(
+            models.Documents.id == document_id,
+            models.Documents.version == version
+        )
+
+        document_retrieved_version = session.execute(stmt).scalar_one()
+        
+        logger.info("Sucessfully retrieved document with its specific version")
+        return document_retrieved_version
+    
+    except NoResultFound as e:
+        logger.exception("Unable to retrieve due to invalid document id or version")
+        raise exceptions.DatabaseStorageError("Unable to find the document with its specific version. Please check the document id and version")
+
+    except DBAPIError as e:
+        logger.exception("A database error occured while retriving document of a specific version")
+        raise exceptions.DatabaseStorageError("Database error occured while trying to retrieve data")
+
+    except Exception as e:
+        logger.exception("unexpected error occured while trying to retrieve data with its specific version")
+        raise exceptions.DatabaseStorageError("Unable to retrieve data due to an unexepected error")
+
 def update_document(session: Session, 
                     document_id: UUID,
                     update_payload: documents_schemas.DocumentUpdate) -> models.Documents:

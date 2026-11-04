@@ -175,4 +175,41 @@ class TestUpdateDocument:
         
         mock_session.rollback.assert_called_once_with()
         
+class TestGetSpecificDocVersion:
+    @patch("app.routers.documents.Session")
+    def test_no_result_found(self, mock_session):
+        mock_session.execute.return_value.scalar_one.side_effect = NoResultFound()
 
+        mock_doc_id = uuid.uuid4()
+        with pytest.raises(exceptions.DatabaseStorageError) as e:
+            documents.get_specific_document_version(version=3,
+                                                    document_id=mock_doc_id,
+                                                    session=mock_session)
+            
+        assert "Unable to find the document with its specific version. Please check the document id and version" in str(e.value)
+
+    @patch("app.routers.documents.Session")
+    def test_db_api_error(self, mock_session):
+        mock_session.execute.return_value.scalar_one.side_effect = DBAPIError(
+            statement="",
+            params=[],
+            orig=Exception("database error occured while updating document")
+        )
+
+        mock_doc_id=uuid.uuid4()
+        with pytest.raises(exceptions.DatabaseStorageError) as e:
+            documents.get_specific_document_version(version=2,
+                                                    document_id=mock_doc_id,
+                                                    session=mock_session)
+
+        assert "Database error occured while trying to retrieve data" in str(e.value)
+
+    @patch("app.routers.documents.Session")
+    def test_general_exception(self, mock_session):
+        mock_session.execute.return_value.scalar_one.side_effect = Exception()
+
+        mock_doc_id=uuid.uuid4()
+        with pytest.raises(exceptions.DatabaseStorageError) as e:
+            documents.get_specific_document_version(version=2,
+                                                    document_id=mock_doc_id,
+                                                    session=mock_session)

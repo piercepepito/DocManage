@@ -59,6 +59,7 @@ class TestUpdateDocumentDB:
         """
         
         new_document=documents.create_new_document(create_db_session, valid_create_document_payload)
+
         
         result = documents.update_document(session = create_db_session,
                                            document_id= new_document.id,
@@ -67,3 +68,18 @@ class TestUpdateDocumentDB:
         assert result.title == expected_title
         assert result.content == expected_content
         assert result.version == expected_version
+
+class TestGetSpecificDocumentVersionDB:
+    def test_specific_version_succesful(self, create_db_session, valid_create_document_payload):
+        new_document=documents.create_new_document(create_db_session, valid_create_document_payload)
+        
+        update_payload_scenario=documents_schemas.DocumentUpdate(title="changed title", content="changed content")
+        updated_document = documents.update_document(session = create_db_session,
+                                                   document_id= new_document.id,
+                                                   update_payload=update_payload_scenario)
+        
+        result = documents.get_specific_document_version(version = updated_document.version,
+                                                         document_id = updated_document.id,
+                                                         session=create_db_session)
+
+        assert result.version == updated_document.version
