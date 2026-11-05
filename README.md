@@ -87,8 +87,10 @@ flowchart TD
     F --> G[Python difflib]
 
     B -->|Queue Background Task| H[Redis]
-    H --> I[Celery Worker]
-    I -->|Webhook| J[DocView]
+    H --> I [Job Table]
+    I --> J[Celery Worker]
+    J --> K [Job History Table]
+    K -->|Webhook| L[DocView]
 ```
 
 
