@@ -82,7 +82,7 @@ flowchart TD
     B --> C[SQLAlchemy]
     C --> D[(PostgreSQL - Supabase)]
 
-    D --> E[Document History | Document]
+    D --> E[Document History and Document Tables]
     B --> F[Document Version Comparison]
     F --> G[Python difflib]
 
