@@ -75,7 +75,7 @@ The main components are:
 
 ## Architecture Diagram
 
-![DocManage Architecture](assets/DocManage System Architecture Flowchart.png)
+![DocManage Architecture](assets/docmanage-architecture.png)
 
 ## How can someone run and test it?
 1. Set up .env file
