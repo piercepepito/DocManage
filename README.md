@@ -75,24 +75,7 @@ The main components are:
 
 ## Architecture Diagram
 
-```mermaid
-flowchart TD
-    A[Client] -->|HTTP Request| B[FastAPI]
-
-    B --> C[SQLAlchemy]
-    C --> D[(PostgreSQL - Supabase)]
-
-    D --> E[Document History and Document Tables]
-    B --> F[Document Version Comparison]
-    F --> G[Python difflib]
-
-    B -->|Queue Background Task| H[Redis]
-    H --> I [Job Table]
-    I --> J[Celery Worker]
-    J --> K [Job History Table]
-    K -->|Webhook| L[DocView]
-```
-
+![DocManage Architecture](assets/DocManage System Architecture Flowchart.png)
 
 ## How can someone run and test it?
 1. Set up .env file
