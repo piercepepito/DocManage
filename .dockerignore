@@ -14,4 +14,3 @@ pytest.ini
 .venv/
 __pycache__/
 .git/
-
