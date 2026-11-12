@@ -21,10 +21,9 @@ DocManage addresses this problem by preserving previous document versions, allow
     2. Compare saved versions to identify changes between revisions
     3. Restore previous versions when needed
 3. External Service Integration
-    1. Integrated with [DocView](https://github.com/piercepepito/DocView) to make documents easier to review
-    2. Generates an HMAC signature to help verification of webhook payloads
-    3. Document updates are sent to DocView for preview generation and AI-powered summarization. 
-4. Reliable server to server communication (*In Progress*)
+    1. Generates an HMAC signature to help verification of webhook payloads
+    2. Document updates are sent to DocView for preview generation and AI-powered summarization. 
+4. Reliable server to server communication
     1. **Automatic Retries**: Retries sending of data with exponential backoff + jitter, to improve the chances of a sucessful delivery
     2. **Dead Letter Queue**: Isolate events that haven't been succesfully sent for investigation and recovery
 
@@ -70,7 +69,6 @@ The main components are:
 - **Celery and Redis:** Handle background tasks and message delivery without adding delay to the main API request.
 
 ### External Services
-- **DocView:** An external service intended to process documents for preview generation and AI-powered summarization.
 - **Difflib:** Another service used to compare the difference between 2 documents
 
 ## Architecture Diagram
